@@ -1,0 +1,25 @@
+{
+  "name": "lostfound-smart-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API de Lost&Found Smart — Universidad San Buenaventura Cali",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": { "node": ">=22.13" },
+  "scripts": {
+    "dev": "node --no-warnings=ExperimentalWarning --watch src/server.js",
+    "start": "node --no-warnings=ExperimentalWarning src/server.js",
+    "seed": "node --no-warnings=ExperimentalWarning src/reset.js",
+    "test": "node --no-warnings=ExperimentalWarning --test test/*.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.16"
+  }
+}
