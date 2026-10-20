@@ -152,3 +152,63 @@ test('HU-13 a HU-17: clasificación, empresas, asignación y disposición', asyn
   const hist = (await api(`/api/items/${termo.id}`, { token: admin })).data.item.history.map((e) => e.type);
   assert.deepEqual(hist.slice(-3), ['clasificado', 'asignado_reciclaje', 'disposicion_final']);
 });
+
+test('HU-18/19: puntos al confirmar la entrega en custodia y niveles de Cazador', async () => {
+  const admin = await login('admin@usbcali.edu.co');
+  const finder = await login('hallador@correo.usbcali.edu.co');
+  const before = (await api('/api/rewards/me', { token: finder })).data;
+  assert.equal(before.points, 12);
+  assert.equal(before.level.id, 'intermedio');
+  assert.ok(before.history.some((t) => t.type === 'earn'));
+
+  // entrega en portería: suma puntos solo cuando el personal confirma la recepción física
+  const form = new FormData();
+  for (const [k, v] of Object.entries({ kind: 'found', title: 'Botella metálica gris', category: 'termos', color: 'gris', description: 'Botella de acero', zone: 'bloque_a', custodyMode: 'office' })) form.append(k, v);
+  form.append('photos', new Blob([PNG], { type: 'image/png' }), 'botella.png');
+  const item = (await api('/api/items', { token: finder, form })).data.item;
+  assert.equal((await api('/api/rewards/me', { token: finder })).data.points, 12);
+  const pending = (await api('/api/rewards/receptions', { token: admin })).data.items;
+  assert.ok(pending.some((i) => i.id === item.id));
+  assert.equal((await api(`/api/rewards/receptions/${item.id}`, { token: finder, method: 'POST' })).status, 403);
+  const ok = await api(`/api/rewards/receptions/${item.id}`, { token: admin, method: 'POST' });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.data.award.points, 3);
+  assert.equal((await api(`/api/rewards/receptions/${item.id}`, { token: admin, method: 'POST' })).status, 409, 'no se otorgan puntos dos veces');
+
+  // recepción directa por el personal (check-in) de un objeto que tenía el hallador
+  const calc = (await api('/api/admin/awaiting', { token: admin })).data.items.find((i) => /Calculadora/.test(i.title));
+  await api(`/api/items/${calc.id}/check-in`, { token: admin, method: 'POST' });
+  const after = (await api('/api/rewards/me', { token: finder })).data;
+  assert.equal(after.points, 18);
+  assert.equal(after.next.id, 'golden');
+  assert.equal(after.next.missing, 3);
+  const hist = (await api(`/api/items/${calc.id}`, { token: admin })).data.item.history.map((e) => e.type);
+  assert.ok(hist.includes('puntos_otorgados'));
+});
+
+test('HU-20: cupones con QR dinámico, de un solo uso y registrados', async () => {
+  const admin = await login('admin@usbcali.edu.co');
+  const finder = await login('hallador@correo.usbcali.edu.co');
+  const student = await login('estudiante@correo.usbcali.edu.co');
+  assert.equal((await api('/api/rewards/coupons', { token: finder, body: { benefit: 'impresiones' } })).status, 403, 'impresiones es Golden');
+  assert.equal((await api('/api/rewards/coupons', { token: finder, body: { benefit: 'seguro' } })).status, 429, 'el seguro se redimió hace poco');
+  const c = await api('/api/rewards/coupons', { token: finder, body: { benefit: 'alimentos' } });
+  assert.equal(c.status, 201);
+  assert.match(c.data.coupon.code, /^CZ-[A-Z2-9]{4}-[A-Z2-9]{4}$/);
+  assert.equal((await api('/api/rewards/coupons', { token: finder, body: { benefit: 'alimentos' } })).status, 409);
+
+  const qr = await api(`/api/rewards/coupons/${c.data.coupon.id}/qr`, { token: finder });
+  assert.match(qr.data.token, /^LFR1\./);
+  assert.equal((await api(`/api/rewards/coupons/${c.data.coupon.id}/qr`, { token: student })).status, 404);
+  assert.equal((await api('/api/rewards/validate', { token: student, body: { token: qr.data.token } })).status, 403);
+  assert.equal((await api('/api/rewards/validate', { token: admin, body: { token: 'LFR1.1.1.aaaaaaaaaaaaaaaaaaaa' } })).status, 400);
+  const v = await api('/api/rewards/validate', { token: admin, body: { token: qr.data.token } });
+  assert.equal(v.status, 200);
+  assert.equal(v.data.coupon.status, 'used');
+  assert.equal((await api('/api/rewards/validate', { token: admin, body: { token: c.data.coupon.code } })).status, 409, 'no se puede usar dos veces');
+
+  const me = (await api('/api/rewards/me', { token: finder })).data;
+  assert.ok(me.history.some((t) => t.type === 'coupon_used' && t.code === c.data.coupon.code));
+  assert.ok(me.benefits.find((b) => b.id === 'alimentos').availableAt);
+  assert.ok(verifyChain().ok);
+});

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, Compass, Inbox, Bell, Plus, ScanLine, LayoutDashboard, Settings, LogOut, Moon, Sun,
-  SearchX, HandHeart, Keyboard, ChevronDown, MonitorSmartphone,
+  SearchX, HandHeart, Keyboard, ChevronDown, MonitorSmartphone, Award,
 } from 'lucide-react';
 import { useAuth, useRealtime, useToast } from '../context/AppContext.jsx';
 import { Dialog, Logo } from './ui.jsx';
@@ -82,6 +82,7 @@ const SHORTCUTS = [
   [['g', 'e'], 'Explorar objetos', '/explorar'],
   [['g', 'r'], 'Mis reclamos', '/reclamos'],
   [['g', 'n'], 'Notificaciones', '/notificaciones'],
+  [['g', 'c'], 'Cazadores de Objetos', '/cazadores'],
   [['n', 'p'], 'Reportar pérdida', '/reportar/perdido'],
   [['n', 'e'], 'Reportar hallazgo', '/reportar/encontrado'],
 ];
@@ -194,6 +195,7 @@ export default function Layout() {
     { to: '/inicio', label: 'Inicio', icon: Home },
     { to: '/explorar', label: 'Explorar', icon: Compass },
     { to: '/reclamos', label: 'Reclamos', icon: Inbox },
+    ...(!isStaff ? [{ to: '/cazadores', label: 'Cazadores', icon: Award }] : []),
     ...(isStaff ? [{ to: '/admin', label: 'Panel', icon: LayoutDashboard }] : []),
   ];
 
@@ -218,7 +220,7 @@ export default function Layout() {
           <div className="header-actions">
             <ReportMenu className="hide-mobile" />
             {(isStaff || user) && (
-              <Link to="/escanear" className="icon-btn hide-mobile" aria-label="Escanear QR de entrega" title="Escanear QR de entrega">
+              <Link to="/escanear" className="icon-btn hide-mobile" aria-label="Escanear QR de entrega o cupón" title="Escanear QR de entrega o cupón">
                 <ScanLine />
               </Link>
             )}
@@ -237,6 +239,7 @@ export default function Layout() {
                   <span className="muted">{user?.email}</span>
                   <span className="badge badge-cyan">{user?.alias}</span>
                 </div>
+                {!isStaff && <Link to="/cazadores" className="menu-item"><Award aria-hidden="true" /> Mis puntos de Cazador</Link>}
                 <Link to="/ajustes" className="menu-item"><Settings aria-hidden="true" /> Ajustes y notificaciones</Link>
                 <button className="menu-item" onClick={() => { setUserMenu(false); setHelp(true); }}><Keyboard aria-hidden="true" /> Atajos de teclado</button>
                 <button className="menu-item" onClick={() => { logout(); navigate('/'); }}><LogOut aria-hidden="true" /> Cerrar sesión</button>

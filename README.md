@@ -26,7 +26,7 @@ La primera vez se crea la base de datos con datos de demostración. Para reinici
 |---|---|---|
 | Estudiante | `estudiante@correo.usbcali.edu.co` | comunidad (tiene coincidencias del 93 % y 99 %) |
 | Docente | `docente@usbcali.edu.co` | comunidad (tiene un reclamo aprobado con chat y QR) |
-| Hallador | `hallador@correo.usbcali.edu.co` | comunidad (reportó objetos encontrados) |
+| Hallador | `hallador@correo.usbcali.edu.co` | comunidad (reportó objetos encontrados; Cazador Intermedio con 12 puntos) |
 | Seguridad | `seguridad@usbcali.edu.co` | personal de seguridad |
 | Administración | `admin@usbcali.edu.co` | administrador del punto de atención |
 
@@ -61,8 +61,9 @@ backend/                 API REST + SSE (Express, SQLite nativo de Node)
       history.js         historial con cadena de hashes SHA-256
       tokens.js          QR dinámico firmado con HMAC, radicados, códigos
       jobs.js            alertas automáticas de custodia y políticas
+      rewards.js         Cazadores de Objetos: puntos, niveles, beneficios y cupones
       privacy.js         ocultamiento de datos en el chat, alias anónimos
-    routes/              auth, items, claims (reclamos, chat, entrega), admin, misc
+    routes/              auth, items, claims (reclamos, chat, entrega), admin, rewards, misc
   test/api.test.js       pruebas de extremo a extremo de la API
 frontend/                React + Vite
   src/
@@ -96,6 +97,14 @@ frontend/                React + Vite
 | **HU-15** Asignación a empresas | Recycling → *Listos para asignar* | Solo se ofrecen empresas compatibles con el material; registra empresa y fecha; estado *Asignado a reciclaje*. Asignación en lote. |
 | **HU-16** Objetos plásticos | Recycling → filtro *Solo plásticos* | El material se sugiere automáticamente (termos, botellas…); solo es reciclable si cumple las condiciones (plazo vencido y sin reclamos). |
 | **HU-17** Disposición final | Recycling → *Asignados* / *Histórico* | Fecha, certificado y observaciones; estado *Reciclado*; trazabilidad completa en el historial del objeto. |
+
+### Sprint 3 · Cazadores de Objetos (gamificación)
+
+| HU | Dónde vive | Cómo se cumplen los criterios |
+|---|---|---|
+| **HU-18** Puntos por entrega | `lib/rewards.js`, `routes/rewards.js`, Custody → *Entregas por confirmar* | Los puntos (3 por objeto, `POINTS_PER_DELIVERY`) se otorgan solo cuando el personal confirma la recepción física: al recibir un objeto que tenía el hallador (*check-in*) o al confirmar uno reportado como entregado en portería. Un índice único impide sumar dos veces por el mismo objeto y el evento `puntos_otorgados` queda en el historial inmutable. Saldo e historial en `pages/Hunters.jsx` (`/cazadores`). |
+| **HU-19** Niveles de Cazador | `LEVELS` en `lib/rewards.js` | Básico 0–9 puntos (seguro estudiantil mejorado), Intermedio 10–20 (+ descuento en la tienda de alimentos), Golden más de 20 (+ impresiones gratuitas). Los beneficios son acumulativos; se notifica al subir de nivel. |
+| **HU-20** Redención de beneficios | `/cazadores`, `pages/Scan.jsx` | Cada beneficio desbloqueado genera un cupón de un solo uso con código `CZ-XXXX-XXXX` y un QR dinámico (`LFR1…`, HMAC, rota cada 30 s). El personal lo valida en *Escanear*. Emisión y uso quedan en el historial de transacciones; hay un solo cupón activo por beneficio, vigencia limitada y tiempo de espera entre redenciones. |
 
 ---
 
@@ -154,5 +163,8 @@ contraste (`forced-colors`), estilos de impresión para el acta y diseño respon
 | POST | `/api/items/preview` · `/:id/check-in` · `/:id/close` | Radar en vivo, ingreso a custodia, cerrar reporte |
 | POST/GET | `/api/claims` · `/claims/:id/decide` · `/claims/:id/messages` · `/claims/:id/qr` | Reclamos, chat, QR |
 | POST | `/api/handover/redeem` | Validar QR y generar acta |
+| GET | `/api/rewards/me` · `/rewards/levels` · `/rewards/coupons` · `/rewards/coupons/:id/qr` | Puntos, nivel, beneficios, historial y QR del cupón |
+| POST | `/api/rewards/coupons` · `/rewards/validate` | Generar cupón · validarlo (personal) |
+| GET/POST | `/api/rewards/receptions` · `/rewards/receptions/:itemId` | Entregas por confirmar y confirmación (otorga puntos) |
 | GET | `/api/stream` | Eventos en tiempo real (SSE) |
 | GET/POST | `/api/admin/…` | Métricas, custodia, políticas, clasificación, empresas, asignaciones, disposición |

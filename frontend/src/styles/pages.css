@@ -637,3 +637,59 @@ a.notif-link:hover { border-color: var(--accent); transform: translateX(3px); }
   .lens-counter { top: 76px; }
   .app-footer .linkish { display: none; }
 }
+
+/* ═════════════ Cazadores de Objetos (HU-18 a HU-20) ═════════════ */
+.hunters { --lvl: var(--accent); }
+.hunters .section-title { font-size: 20px; letter-spacing: -0.02em; margin-bottom: 14px; }
+.lvl-basico { --lvl: var(--cyan); }
+.lvl-intermedio { --lvl: var(--accent); }
+.lvl-golden { --lvl: var(--warn); }
+
+.hunter-card { display: grid; grid-template-columns: auto 1fr auto; gap: 24px; align-items: center; padding: clamp(18px, 3vw, 28px);
+  background: radial-gradient(520px 220px at 0% 0%, color-mix(in srgb, var(--lvl) 20%, transparent), transparent), var(--surface); }
+.hunter-badge { width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; color: var(--lvl);
+  background: color-mix(in srgb, var(--lvl) 14%, var(--surface)); border: 2px solid color-mix(in srgb, var(--lvl) 45%, transparent); }
+.hunter-badge svg { width: 40px; height: 40px; }
+.hunter-main { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.hunter-main h2 { font-size: clamp(26px, 4vw, 36px); letter-spacing: -0.03em; }
+.hunter-points strong { font-size: 22px; font-weight: 600; color: var(--lvl); }
+.hunter-card .kpi-bar i { background: var(--lvl); }
+@media (max-width: 760px) { .hunter-card { grid-template-columns: 1fr; justify-items: start; } }
+
+.level-ladder { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.level-step { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); }
+.level-step > strong { color: var(--lvl); font-size: 17px; }
+.level-step ul { margin: 6px 0 0; padding-left: 18px; font-size: 14px; color: var(--ink-2); }
+.level-step:not(.is-reached) { opacity: .72; }
+.level-step.is-current { border-color: var(--lvl); box-shadow: 0 0 0 1px var(--lvl) inset; }
+@media (max-width: 760px) { .level-ladder { grid-template-columns: 1fr; } }
+
+.benefit-grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.benefit { display: flex; flex-direction: column; gap: 6px; }
+.benefit-ico { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); margin-bottom: 4px; }
+.benefit-ico svg { width: 22px; height: 22px; }
+.benefit.is-locked .benefit-ico { background: var(--surface-3); color: var(--ink-3); }
+.benefit.is-locked > strong { color: var(--ink-2); }
+.benefit-foot { margin-top: auto; padding-top: 8px; }
+
+.tx-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; }
+.tx { display: flex; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid var(--line); }
+.tx:first-child { border-top: 0; }
+.tx .grow { display: flex; flex-direction: column; min-width: 0; }
+.tx-ico { flex: none; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--ink-2); }
+.tx-ico svg { width: 17px; height: 17px; }
+.tx-earn .tx-ico { background: var(--ok-soft); color: var(--ok); }
+.tx-coupon_used .tx-ico { background: var(--accent-soft); color: var(--accent); }
+.tx-side { display: flex; flex-direction: column; align-items: flex-end; text-align: right; flex: none; }
+.tx-points { font-family: var(--font-mono); color: var(--ok); }
+
+.coupon-code { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.coupon-code strong { font-size: 20px; letter-spacing: .06em; user-select: all; }
+.coupon-ok { border-color: var(--ok); }
+.coupon-ok h2 { color: var(--ok); }
+
+.reception-list { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px; }
+.reception-row { display: flex; gap: 14px; align-items: center; }
+.reception-row .grow { display: flex; flex-direction: column; min-width: 0; }
+.reception-art { flex: none; width: 48px; height: 48px; border-radius: 10px; }
+@media (max-width: 560px) { .reception-row { flex-wrap: wrap; } .reception-row .btn { width: 100%; } }

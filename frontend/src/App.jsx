@@ -16,6 +16,7 @@ const Chat = lazy(() => import('./pages/Chat.jsx'));
 const Handover = lazy(() => import('./pages/Handover.jsx'));
 const Scan = lazy(() => import('./pages/Scan.jsx'));
 const Notifications = lazy(() => import('./pages/Notifications.jsx'));
+const Hunters = lazy(() => import('./pages/Hunters.jsx'));
 const SettingsPage = lazy(() => import('./pages/Settings.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard.jsx'));
@@ -90,6 +91,7 @@ const router = createBrowserRouter([
             { path: '/entrega/:id', element: <Handover /> },
             { path: '/escanear', element: <Scan /> },
             { path: '/notificaciones', element: <Notifications /> },
+            { path: '/cazadores', element: <Hunters /> },
             { path: '/ajustes', element: <SettingsPage /> },
             {
               element: <RequireAuth staff />,

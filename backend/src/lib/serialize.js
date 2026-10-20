@@ -1,4 +1,5 @@
 import { config } from '../config.js';
+import { isRewarded } from './rewards.js';
 import { statusLabel, zoneLabel, categoryLabel, colorLabel, materialLabel, IN_CUSTODY, suggestMaterial } from './domain.js';
 
 const DAY = 86_400_000;
@@ -69,6 +70,8 @@ export function serializeItem(row, viewer) {
     out.policyName = row.policy_name ?? null;
     out.policyDeadline = row.policy_deadline;
   }
+  // HU-18: ¿la entrega ya sumó puntos de Cazador?
+  if ((staff || owner) && row.kind === 'found') out.rewarded = isRewarded(row.id);
   return out;
 }
 

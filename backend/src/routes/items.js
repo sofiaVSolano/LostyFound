@@ -14,6 +14,7 @@ import { record, itemHistory } from '../lib/history.js';
 import { makeRadicado } from '../lib/tokens.js';
 import { applyPolicy } from '../lib/custody.js';
 import { notify, notifyStaff } from '../lib/notify.js';
+import { awardDelivery, notifyAward } from '../lib/rewards.js';
 
 const router = Router();
 
@@ -267,14 +268,17 @@ router.post('/:id/check-in', requireAuth, h((req, res) => {
   if (row.user_id !== req.user.id && !isStaff(req.user)) throw new HttpError(403, 'Sin permisos.');
   if (row.status !== 'en_espera_entrega') throw new HttpError(400, 'El objeto ya está en custodia o fue entregado.');
   const now = new Date().toISOString();
-  tx(() => {
+  const award = tx(() => {
     run("UPDATE items SET custody_mode = 'office', status = 'en_custodia', custody_at = ?, updated_at = datetime('now') WHERE id = ?", now, row.id);
     record(row.id, 'ingreso_custodia', req.user.id, { at: now, receivedByStaff: isStaff(req.user) });
     applyPolicy(row.id);
+    // HU-18 CA1: si el personal recibe el objeto, se confirma la entrega y se otorgan los puntos
+    return isStaff(req.user) ? awardDelivery(row, req.user.id) : null;
   });
   if (row.user_id !== req.user.id) {
     notify(row.user_id, { type: 'status', title: 'Objeto recibido en la oficina', body: `${row.title} (${row.radicado}) ya está en custodia. ¡Gracias por devolverlo!`, link: `/objetos/${row.id}` });
   }
+  notifyAward(award, row);
   // avisar a quienes lo están buscando del cambio de estado
   for (const m of all("SELECT DISTINCT l.user_id FROM matches m JOIN items l ON l.id = m.lost_id WHERE m.found_id = ? AND l.status = 'activo'", row.id)) {
     notify(m.user_id, { type: 'status', title: 'Un posible objeto tuyo cambió de estado', body: `${row.title} ahora está "${statusLabel('found', 'en_custodia')}" en ${zoneLabel('oficina')}.`, link: `/objetos/${row.id}`, email: false });

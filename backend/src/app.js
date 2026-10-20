@@ -11,6 +11,7 @@ import itemRoutes from './routes/items.js';
 import claimRoutes, { handoverRouter } from './routes/claims.js';
 import adminRoutes from './routes/admin.js';
 import miscRoutes from './routes/misc.js';
+import rewardRoutes from './routes/rewards.js';
 
 export function createApp() {
   const app = express();
@@ -27,6 +28,7 @@ export function createApp() {
   app.use('/api/claims', claimRoutes);
   app.use('/api/handover', handoverRouter);
   app.use('/api/admin', adminRoutes);
+  app.use('/api/rewards', rewardRoutes);
   app.use('/api', miscRoutes);
 
   // En producción, el backend también sirve el frontend compilado

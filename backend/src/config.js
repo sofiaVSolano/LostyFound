@@ -24,6 +24,8 @@ export const config = {
   // HU-04 / HU-07: umbrales del motor de coincidencias
   matchThreshold: 0.6,
   notifyThreshold: 0.8,
+  // HU-18: puntos de Cazador por cada objeto sin dueño entregado en custodia
+  pointsPerDelivery: Number(env.POINTS_PER_DELIVERY || 3),
   smtp: {
     host: env.SMTP_HOST,
     port: Number(env.SMTP_PORT || 587),

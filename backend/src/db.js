@@ -164,6 +164,36 @@ CREATE TABLE IF NOT EXISTS assignments (
   certificate TEXT,
   notes TEXT
 );
+
+-- HU-18 a HU-20: Cazadores de Objetos. Libro de transacciones de puntos y cupones.
+-- type: 'earn' (entrega confirmada en custodia), 'coupon_issued', 'coupon_used'
+CREATE TABLE IF NOT EXISTS reward_transactions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  type TEXT NOT NULL CHECK (type IN ('earn','coupon_issued','coupon_used')),
+  points INTEGER NOT NULL DEFAULT 0,
+  item_id INTEGER REFERENCES items(id),
+  coupon_id INTEGER REFERENCES coupons(id),
+  actor_id INTEGER REFERENCES users(id),
+  note TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+-- Un objeto solo puede otorgar puntos una vez
+CREATE UNIQUE INDEX IF NOT EXISTS idx_rewards_earn_item ON reward_transactions(item_id) WHERE type = 'earn';
+CREATE INDEX IF NOT EXISTS idx_rewards_user ON reward_transactions(user_id);
+
+CREATE TABLE IF NOT EXISTS coupons (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  benefit TEXT NOT NULL,
+  level TEXT NOT NULL,
+  code TEXT NOT NULL UNIQUE,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active','used','expired')),
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+  expires_at TEXT NOT NULL,
+  used_at TEXT,
+  used_by INTEGER REFERENCES users(id)
+);
 `);
 
 /** Ejecuta fn dentro de una transacción. */

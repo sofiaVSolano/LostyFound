@@ -141,7 +141,7 @@ export function RealtimeProvider({ children, onNavigate }) {
         const data = JSON.parse(ev.data);
         listeners.current.get(name)?.forEach((fn) => fn(data));
       };
-      for (const name of ['message', 'claim', 'typing']) es.addEventListener(name, fire(name));
+      for (const name of ['message', 'claim', 'typing', 'coupon']) es.addEventListener(name, fire(name));
       es.addEventListener('notification', (ev) => {
         const n = JSON.parse(ev.data);
         setUnread((u) => u + 1);

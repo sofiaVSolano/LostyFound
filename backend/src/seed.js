@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import { all, run, tx } from './db.js';
+import { all, one, run, tx } from './db.js';
 import { config } from './config.js';
 import { COLORS } from './lib/domain.js';
 import { record } from './lib/history.js';
@@ -8,6 +8,7 @@ import { applyPolicy } from './lib/custody.js';
 import { syntheticVector } from './lib/matching/visual.js';
 import { runMatching } from './lib/matching/engine.js';
 import { checkCustody } from './lib/jobs.js';
+import { awardDelivery } from './lib/rewards.js';
 
 export const DEMO_PASSWORD = 'Demo1234*';
 const DAY = 86_400_000;
@@ -141,6 +142,18 @@ export function seed() {
     record(items.tomatodo, 'disposicion_final', users.admin, { outcome: 'reciclado', company: 'EcoCiclo Valle S.A.S.', certificate: 'CERT-ECO-2026-118' }, ago(62));
     record(items.balon, 'protocolo_iniciado', users.admin, { protocol: 'donacion' }, ago(40));
     record(items.balon, 'disposicion_final', users.admin, { outcome: 'donado', notes: 'Donado a la escuela deportiva del barrio' }, ago(35));
+
+    // HU-18 a HU-20: el hallador es Cazador Intermedio por sus entregas confirmadas en la oficina
+    for (const key of ['botella', 'celular', 'gorra', 'llaves']) {
+      const it = one('SELECT * FROM items WHERE id = ?', items[key]);
+      awardDelivery(it, users.security, it.custody_at);
+    }
+    const coupon = Number(run(
+      "INSERT INTO coupons (user_id, benefit, level, code, status, created_at, expires_at, used_at, used_by) VALUES (?, 'seguro', 'basico', 'CZ-DEMO-SEG1', 'used', ?, ?, ?, ?)",
+      users.finder, ago(30), ago(23), ago(29), users.admin
+    ).lastInsertRowid);
+    run("INSERT INTO reward_transactions (user_id, type, coupon_id, note, created_at) VALUES (?, 'coupon_issued', ?, 'Cupón generado: Seguro estudiantil mejorado', ?)", users.finder, coupon, ago(30));
+    run("INSERT INTO reward_transactions (user_id, type, coupon_id, actor_id, note, created_at) VALUES (?, 'coupon_used', ?, ?, 'Cupón redimido: Seguro estudiantil mejorado', ?)", users.finder, coupon, users.admin, ago(29));
   });
 
   // Coincidencias iniciales y alertas de custodia
